@@ -59,7 +59,7 @@ class rsync_connect():
     def upstream(self, dryrun=None, delete=None):
         rsync_command = self._rsync_up(dryrun, delete)
         print('Copying files upstream to {}'.format(self.name))
-        print(rsync_command)
+        #print(rsync_command)
         os.system(rsync_command)
 
     def downstream(self, dryrun=None, delete=None):
