@@ -1,0 +1,10 @@
+#!/bin/bash
+# Removes ancillary files associated with LaTeX
+
+# Remove most common LaTeX files
+for EXT in aux log thm tex.backup tex.bak '*~' bbl blg nav out snm toc vrb lof lot
+do
+   RUN="find ${1} -name \"*.${EXT}\" -print0 | xargs -0 /bin/rm -f {}"
+   #echo $RUN
+   eval $RUN
+done
