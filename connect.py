@@ -100,28 +100,43 @@ class connection_list():
                 folder = '$HOME/' + name
         self._connections.append(rsync_connect(name=name, folder=folder, user=user, system=system, remote=remote, delete=delete, dryrun=dryrun))
 
-    def rsync_run_arguments(self, arglist):
+    def _runlist(self, systemlist):
         names = [s.name for s in self._connections]
+        runlist = []
+        for a in systemlist:
+            if a.lower() == 'all':
+                runlist = names
+                break
+            elif a.lower() in names:
+                runlist.append(a.lower())
+        return runlist
+
+    def upstream(self, systemlist):
+        for n in self._runlist(systemlist):
+            system = [s for s in self._connections if s.name == n][0]
+            system.upstream()
+
+    def downstream(self, systemlist):
+        for n in self._runlist(systemlist):
+            system = [s for s in self._connections if s.name == n][0]
+            system.downstream()
+
+    def sync(self, systemlist):
+        for n in self._runlist(systemlist):
+            system = [s for s in self._connections if s.name == n][0]
+            system.sync()
+
+    def rsync_run_arguments(self, arglist):
         connect_type = 'sync'
         for a in arglist:
             if a.lower() in ('up,down'):
                 connect_type = a.lower()
                 arglist.remove(a)
 
-        runlist = []
-        for a in arglist:
-            if a.lower() == 'all':
-                runlist = names
-                break
-            elif a.lower() in names:
-                runlist.append(a.lower())
-
-        for n in runlist:
-            system = [s for s in self._connections if s.name == n][0]
-            if connect_type == 'sync':
-                system.sync()
-            elif connect_type == 'up':
-                system.upstream()
-            elif connect_type == 'down':
-                system.downstream()
+        if connect_type == 'sync':
+            self.sync(arglist)
+        elif connect_type == 'up':
+            self.upstream(arglist)
+        elif connect_type == 'down':
+            self.downstream(arglist)
 
