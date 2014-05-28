@@ -1,7 +1,7 @@
 import os
 
 class rsync_connect():
-    def __init__(self, name, system, user, folder, remote, delete=False, dryrun=False):
+    def __init__(self, name, system, user, folder, remote, port=None, delete=False, dryrun=False):
         self.name = name
         self.system = system
         self.user = user
@@ -11,11 +11,17 @@ class rsync_connect():
             self.remote = self.remote + '/'
         if not self.folder[-1] == '/':
             self.folder = self.folder + '/'
+        if port is not None:
+            self.rsh = '--rsh="ssh -p ' + str(port) + '"'
+        else:
+            self.rsh = None
         self.delete = delete
         self.dryrun = dryrun
 
     def _options(self, dryrun, delete):
         opts = '-vrtu --no-motd --progress'
+        if self.rsh is not None:
+            opts = opts + ' ' + self.rsh
         if dryrun is not None:
             if dryrun:
                 opts = opts + ' -n'
@@ -53,7 +59,7 @@ class rsync_connect():
     def upstream(self, dryrun=None, delete=None):
         rsync_command = self._rsync_up(dryrun, delete)
         print('Copying files upstream to {}'.format(self.name))
-        #print(rsync_command)
+        print(rsync_command)
         os.system(rsync_command)
 
     def downstream(self, dryrun=None, delete=None):
@@ -74,10 +80,11 @@ class rsync_connect():
         os.system(rsync_down)
 
 class connection_list():
-    def __init__(self, user=None, folder=None, remote=None, delete=False, dryrun=False):
+    def __init__(self, user=None, folder=None, remote=None, port=None, delete=False, dryrun=False):
         self._connections = []
         self._user = user
         self._remote = remote
+        self._port = port
         self._delete = delete
         self._dryrun = dryrun
         if folder == 'by name' or folder is None:
@@ -85,11 +92,13 @@ class connection_list():
         else:
             self._folder = folder
 
-    def add_rsync(self, name=None, system=None, user=None, folder=None, remote=None, delete=None, dryrun=None):
+    def add_rsync(self, name=None, system=None, user=None, folder=None, remote=None, port=None, delete=None, dryrun=None):
         if user is None:
             user = self._user
         if remote is None:
             remote = self._remote
+        if port is None:
+            port = self._port
         if delete is None:
             delete = self._delete
         if dryrun is None:
@@ -98,7 +107,7 @@ class connection_list():
             folder = self._folder
             if folder == 'by name':
                 folder = '$HOME/' + name
-        self._connections.append(rsync_connect(name=name, folder=folder, user=user, system=system, remote=remote, delete=delete, dryrun=dryrun))
+        self._connections.append(rsync_connect(name=name, folder=folder, user=user, system=system, remote=remote, port=port, delete=delete, dryrun=dryrun))
 
     def _runlist(self, systemlist):
         names = [s.name for s in self._connections]
