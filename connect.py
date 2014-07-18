@@ -80,17 +80,15 @@ class rsync_connect():
         os.system(rsync_down)
 
 class connection_list():
-    def __init__(self, user=None, folder=None, remote=None, port=None, delete=False, dryrun=False):
+    def __init__(self, user=None, folder=None, by_name=None, remote=None, port=None, delete=False, dryrun=False):
         self._connections = []
         self._user = user
         self._remote = remote
         self._port = port
         self._delete = delete
         self._dryrun = dryrun
-        if folder == 'by name' or folder is None:
-            self._folder = 'by name'
-        else:
-            self._folder = folder
+        self._folder = folder
+        self._by_name = by_name
 
     def add_rsync(self, name=None, system=None, user=None, folder=None, remote=None, port=None, delete=None, dryrun=None):
         if user is None:
@@ -104,9 +102,10 @@ class connection_list():
         if dryrun is None:
             dryrun = self._dryrun
         if folder is None:
-            folder = self._folder
-            if folder == 'by name':
-                folder = '$HOME/' + name
+            if self._by_name is not None:
+                folder = self._by_name + name
+            else:
+                folder = self._folder
         self._connections.append(rsync_connect(name=name, folder=folder, user=user, system=system, remote=remote, port=port, delete=delete, dryrun=dryrun))
 
     def _runlist(self, systemlist):
